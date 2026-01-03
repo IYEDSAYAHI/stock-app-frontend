@@ -1,0 +1,74 @@
+<div class="print-container bg-gray-100 dark:bg-gray-900 p-4">
+  <div class="controls noprint my-4 text-center">
+    <button (click)="goBack()" class="bg-gray-500 dark:bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-600 dark:hover:bg-gray-700 mr-2">Back to Billing</button>
+    <button (click)="print()" class="bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700">Print Invoice</button>
+  </div>
+  
+  @if (invoice(); as inv) {
+    <div class="invoice-box bg-white p-8 rounded-lg shadow-lg">
+      <header class="flex justify-between items-start mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">INVOICE</h1>
+          <p class="text-gray-500">Store Management Pro</p>
+          <p class="text-gray-500">123 Market St, Suite 100</p>
+          <p class="text-gray-500">Anytown, USA 12345</p>
+        </div>
+        <div class="text-right">
+          <p><strong>Invoice #:</strong> {{ inv.invoiceNumber }}</p>
+          <p><strong>Date:</strong> {{ inv.date | date:'longDate' }}</p>
+        </div>
+      </header>
+
+      <section class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-700 mb-2">Bill To:</h2>
+        <p>{{ inv.customerName }}</p>
+      </section>
+
+      <section>
+        <table class="w-full text-left">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="p-2">Item</th>
+              <th class="p-2 text-center">Quantity</th>
+              <th class="p-2 text-right">Unit Price</th>
+              <th class="p-2 text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of inv.items; track item.product.id) {
+              <tr class="border-b">
+                <td class="p-2">{{ item.product.name }}</td>
+                <td class="p-2 text-center">{{ item.quantity }}</td>
+                <td class="p-2 text-right">{{ item.price | currency }}</td>
+                <td class="p-2 text-right font-medium">{{ item.total | currency }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+
+      <section class="flex justify-end mt-8">
+        <div class="w-1/3">
+          <div class="flex justify-between p-2">
+            <span>Subtotal</span>
+            <span>{{ inv.subtotal | currency }}</span>
+          </div>
+          <div class="flex justify-between p-2">
+            <span>Tax (8%)</span>
+            <span>{{ inv.tax | currency }}</span>
+          </div>
+          <div class="flex justify-between p-2 bg-gray-100 font-bold text-lg">
+            <span>Total</span>
+            <span>{{ inv.total | currency }}</span>
+          </div>
+        </div>
+      </section>
+
+      <footer class="text-center text-gray-500 mt-12 pt-4 border-t">
+        <p>Thank you for your business!</p>
+      </footer>
+    </div>
+  } @else {
+    <p class="text-center">Invoice not found.</p>
+  }
+</div>
