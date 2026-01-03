@@ -37,7 +37,9 @@ export class InvoicePrintComponent implements AfterViewInit {
     // Automatically trigger print dialog
     setTimeout(() => window.print(), 500);
   }
-
+  print(): void {
+    window.print();
+  }
   goBack(): void {
     this.router.navigate(['/billing']);
   }
