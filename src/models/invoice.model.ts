@@ -4,8 +4,8 @@ import { Product } from './product.model';
 export interface InvoiceItem {
   product: Product;
   quantity: number;
-  price: number; // Price at the time of sale
-  total: number;
+  priceHT: number; // Price at the time of sale (Hors Taxe)
+  totalHT: number;
 }
 
 export interface Invoice {
@@ -13,8 +13,15 @@ export interface Invoice {
   invoiceNumber: string;
   date: Date;
   customerName: string;
+  customerAddress?: string;
+  customerTaxId?: string;
   items: InvoiceItem[];
-  subtotal: number;
-  tax: number;
-  total: number;
+  subtotalHT: number;
+  tvaAmount: number;
+  totalTTC: number;
+  status: 'Pending' | 'Paid' | 'Cancelled';
+  discount?: number;
+  paymentMethod?: string;
+  amountReceived?: number;
+  changeDue?: number;
 }

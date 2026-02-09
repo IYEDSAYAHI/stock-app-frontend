@@ -17,7 +17,7 @@ export class AuthService {
       localStorage.setItem('currentUser', username);
       this.currentUser.set(username);
       this.notificationService.show('Welcome back!');
-      this.router.navigate(['/inventory']);
+      this.router.navigate(['/dashboard']);
       return true;
     }
     this.notificationService.show('Invalid credentials.', 'error');

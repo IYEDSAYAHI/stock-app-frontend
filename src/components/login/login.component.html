@@ -1,49 +1,246 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-md w-full space-y-8">
-    <div>
-      <svg class="mx-auto h-12 w-auto text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-      </svg>
-      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-100">
-        Sign in to your store
-      </h2>
-    </div>
-    <div class="mt-8 space-y-6 bg-white dark:bg-gray-800 p-8 shadow-md rounded-lg">
-      <div class="rounded-md shadow-sm -space-y-px">
-        <div>
-          <label for="username" class="sr-only">Username</label>
-          <input 
-            id="username" 
-            name="username" 
-            type="text" 
-            required 
-            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-teal-500 focus:border-teal-500 focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" 
-            placeholder="Username (e.g., storeowner)"
-            [value]="username()"
-            (input)="username.set($any($event.target).value)">
-        </div>
-        <div>
-          <label for="password" class="sr-only">Password</label>
-          <input 
-            id="password" 
-            name="password" 
-            type="password" 
-            required 
-            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-teal-500 focus:border-teal-500 focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" 
-            placeholder="Password (any password will work)"
-            [value]="password()"
-            (input)="password.set($any($event.target).value)">
-        </div>
-      </div>
+<div class="lamp-login-container" [class.on]="isLampOn()">
+  <!-- The light effect spans the whole container, originating from the left -->
+  <div class="light-effect"></div>
 
-      <div>
-        <button 
-          type="submit" 
-          (click)="login()"
-          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+  <!-- Left Side: Lamp -->
+  <div class="lamp-section">
+    <div class="lamp-area">
+      <div class="lamp-wire"></div>
+      <div class="lamp">
+        <div class="lampshade"></div>
+        <div class="bulb"></div>
+      </div>
+      <div class="pull-string-container" (click)="toggleLamp()" title="Toggle light">
+        <div class="pull-string"></div>
+        <div class="pull-string-handle"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Login Form -->
+  <div class="login-section">
+    <div class="login-form-wrapper">
+      <div class="max-w-sm w-full space-y-6">
+        <h2 class="text-center text-3xl font-extrabold text-gray-500 transition-colors duration-500">
           Sign in
-        </button>
+        </h2>
+        <div class="space-y-4">
+          <div>
+            <label for="username" class="sr-only">Username</label>
+            <input 
+              id="username" 
+              name="username" 
+              type="text" 
+              required 
+              class="appearance-none rounded-md relative block w-full px-4 py-3 border border-yellow-800/50 bg-yellow-50/10 placeholder-gray-500 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 focus:z-10 sm:text-sm" 
+              placeholder="Username (e.g., storeowner)"
+              [value]="username()"
+              (input)="username.set($any($event.target).value)">
+          </div>
+          <div>
+            <label for="password" class="sr-only">Password</label>
+            <input 
+              id="password" 
+              name="password" 
+              type="password" 
+              required 
+              class="appearance-none rounded-md relative block w-full px-4 py-3 border border-yellow-800/50 bg-yellow-50/10 placeholder-gray-500 text-white focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 focus:z-10 sm:text-sm" 
+              placeholder="Password (any password will work)"
+              [value]="password()"
+              (input)="password.set($any($event.target).value)">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end">
+          <a href="#" class="text-sm font-medium text-yellow-400 hover:text-yellow-300">
+            Forgot your password?
+          </a>
+        </div>
+
+        <div>
+          <button 
+            type="submit" 
+            (click)="login()"
+            class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 focus:ring-offset-gray-900 transition-colors">
+            Sign in
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<style>
+  .lamp-login-container {
+    min-height: 100vh;
+    display: flex; /* Key change for split layout */
+    background: #121212;
+    position: relative;
+    overflow: hidden;
+    transition: background-color 0.8s ease-in-out;
+  }
+
+  .lamp-login-container.on {
+    background: #1a160d; /* A slightly warmer dark for the background */
+  }
+
+  /* Split Screen Sections */
+  .lamp-section, .login-section {
+    width: 50%;
+    height: 100vh; /* Full height sections */
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.5s ease-in-out;
+  }
+  
+  /* Add a subtle separator that appears with the light */
+  .login-section::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    opacity: 0;
+    transition: opacity 0.8s 0.2s ease-in-out;
+  }
+
+  .lamp-login-container.on .login-section::before {
+    opacity: 1;
+  }
+
+  /* Light effect: Positioned relative to the viewport center of the left panel */
+  .light-effect {
+    position: absolute;
+    top: 25%;
+    left: 25%; /* Center of the left 50% section */
+    width: 1px;
+    height: 1px;
+    background: radial-gradient(circle, rgba(255, 204, 77, 0.25) 0%, rgba(255, 204, 77, 0) 65%);
+    transform: translateX(-50%);
+    border-radius: 50%;
+    opacity: 0;
+    scale: 0.1;
+    transition: opacity 0.8s ease-in-out, scale 0.8s ease-in-out;
+    z-index: 1; /* Below lamp, above background */
+  }
+
+  .lamp-login-container.on .light-effect {
+    opacity: 1;
+    scale: 1500;
+  }
+
+  /* Lamp Structure: Now centered in the left panel */
+  .lamp-area {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+
+  .lamp-wire {
+    width: 2px;
+    height: 25vh;
+    background: #000;
+    margin: 0 auto;
+  }
+
+  .lamp {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .lampshade {
+    width: 120px;
+    height: 60px;
+    background: #4a4a4a;
+    border-radius: 4px 4px 50% 50% / 4px 4px 10% 10%;
+    position: relative;
+    z-index: 2;
+  }
+  .lampshade::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 10px;
+    background: #333;
+    border-radius: 3px 3px 0 0;
+  }
+
+  .bulb {
+    width: 28px;
+    height: 28px;
+    background: #3a3a3a;
+    border-radius: 50%;
+    position: relative;
+    top: -10px;
+    transition: all 0.5s ease-in-out;
+  }
+
+  .lamp-login-container.on .bulb {
+    background: #ffd700;
+    box-shadow: 0 0 20px #ffd700, 0 0 40px #ffc400, 0 0 60px #ffac00;
+  }
+
+  /* Pull string */
+  .pull-string-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding-bottom: 20px;
+    top: -10px;
+    transition: transform 0.2s ease;
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+  }
+  .pull-string-container:hover {
+    transform: translateY(5px);
+  }
+
+  .pull-string {
+    width: 1.5px;
+    height: 60px;
+    background: #ccc;
+    transition: height 0.2s ease;
+  }
+  .pull-string-container:hover .pull-string {
+    height: 65px;
+  }
+
+  .pull-string-handle {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ccc;
+  }
+
+  /* Login Form: Now in the right panel */
+  .login-form-wrapper {
+    position: relative;
+    z-index: 5;
+    opacity: 0;
+    transform: translateX(30px) scale(0.98); /* Start off-screen to the right */
+    transition: opacity 0.6s 0.4s ease-out, transform 0.6s 0.4s ease-out; /* Delay the fade in */
+    pointer-events: none;
+  }
+
+  .lamp-login-container.on .login-form-wrapper {
+    opacity: 1;
+    transform: translateX(0) scale(1); /* Slide into view */
+    pointer-events: auto;
+  }
+
+  .lamp-login-container.on .login-form-wrapper h2 {
+    color: #fde68a; /* Warm yellow text */
+  }
+</style>
