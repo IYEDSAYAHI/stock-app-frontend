@@ -1,0 +1,46 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center" (click)="cancel.emit()">
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-lg" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
+        Edit Invoice {{ invoice().invoiceNumber }}
+      </h2>
+      <button (click)="cancel.emit()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <form [formGroup]="editForm" (ngSubmit)="onSubmit()" class="p-6 space-y-4">
+      <div>
+        <label for="customerName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer Name</label>
+        <input 
+          type="text" 
+          id="customerName" 
+          formControlName="customerName"
+          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+      </div>
+      <div>
+        <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+        <select 
+          id="status" 
+          formControlName="status"
+          class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+          @for(status of statuses; track status) {
+            <option [value]="status">{{ status }}</option>
+          }
+        </select>
+      </div>
+      
+      <!-- Footer with Actions -->
+      <div class="flex justify-end pt-4 border-t dark:border-gray-700">
+        <button type="button" (click)="cancel.emit()" class="px-4 py-2 mr-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="editForm.invalid" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-400">
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

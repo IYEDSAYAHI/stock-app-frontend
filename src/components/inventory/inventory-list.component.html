@@ -1,47 +1,252 @@
 <div class="container mx-auto">
-  <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6">Inventory Management</h1>
+  <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6">Inventory</h1>
   
   <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-    <div class="mb-4">
-      <input 
-        type="text" 
-        placeholder="Search for products..."
-        class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-        [value]="searchTerm()"
-        (input)="onSearch($event)">
+    <!-- Tab Navigation -->
+    <div class="border-b border-gray-200 dark:border-gray-700 mb-4">
+      <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+        <button (click)="setTab('all')" 
+           [class]="activeTab() === 'all' 
+             ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' 
+             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-500'"
+           class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+          All Products
+        </button>
+        <button (click)="setTab('low')" 
+           [class]="activeTab() === 'low' 
+             ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' 
+             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-500'"
+           class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center">
+          Low Stock
+          @if(lowStockProducts().length > 0) {
+            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+              {{ lowStockProducts().length }}
+            </span>
+          }
+        </button>
+        <button (click)="setTab('out')" 
+           [class]="activeTab() === 'out' 
+             ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' 
+             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-500'"
+           class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center">
+          Out of Stock
+           @if(outOfStockProducts().length > 0) {
+            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+              {{ outOfStockProducts().length }}
+            </span>
+          }
+        </button>
+         <button (click)="setTab('highMargin')" 
+           [class]="activeTab() === 'highMargin' 
+             ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' 
+             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-500'"
+           class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center">
+          High Margin
+           @if(highMarginProducts().length > 0) {
+            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+              {{ highMarginProducts().length }}
+            </span>
+          }
+        </button>
+      </nav>
     </div>
 
+    <!-- Search and Action Bar -->
+    <div class="mb-4 flex justify-between items-center">
+      <div class="flex-grow pr-4">
+        @if (activeTab() !== 'low') {
+          <input 
+            type="text" 
+            placeholder="Search products by name or category..."
+            class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+            [value]="searchTerm()"
+            (input)="onSearch($event)">
+        } @else {
+          <div class="flex-grow"></div>
+        }
+      </div>
+      @if (selectedProducts().size > 0) {
+        <button (click)="openModal('deleteMultiple')" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          Delete Selected ({{selectedProducts().size}})
+        </button>
+      } @else {
+        @if (activeTab() === 'low') {
+          <button (click)="createPurchaseOrder()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-400" [disabled]="lowStockProducts().length === 0">
+              Create Purchase Order
+          </button>
+        }
+        @if (activeTab() === 'all') {
+          <button (click)="openModal('add')" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+              Add Product
+          </button>
+        }
+      }
+    </div>
+
+    <!-- Tables for each tab -->
     <div class="overflow-x-auto">
-      <table class="min-w-full bg-white dark:bg-gray-800">
-        <thead class="bg-gray-800 text-white">
-          <tr>
-            <th class="w-1/3 text-left py-3 px-4 uppercase font-semibold text-sm">Product Name</th>
-            <th class="w-1/3 text-left py-3 px-4 uppercase font-semibold text-sm">Description</th>
-            <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Price</th>
-            <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Stock</th>
-          </tr>
-        </thead>
-        <tbody class="text-gray-700 dark:text-gray-300">
-          @for (product of filteredProducts(); track product.id) {
-            <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
-              <td class="py-3 px-4">{{ product.name }}</td>
-              <td class="py-3 px-4">{{ product.description }}</td>
-              <td class="py-3 px-4">{{ product.price | currency }}</td>
-              <td class="py-3 px-4">
-                <span 
-                  class="px-2 py-1 font-semibold leading-tight rounded-full"
-                  [class]="product.quantityInStock > 20 ? 'text-green-700 bg-green-100 dark:text-green-200 dark:bg-green-900' : 'text-red-700 bg-red-100 dark:text-red-200 dark:bg-red-900'">
-                  {{ product.quantityInStock }}
-                </span>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="4" class="text-center py-4 text-gray-500 dark:text-gray-400">No products found.</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+      @switch (activeTab()) {
+        @case ('all') {
+          <table class="min-w-full bg-white dark:bg-gray-800">
+            <thead class="bg-gray-800 text-white">
+              <tr>
+                <th class="py-3 px-4 w-12 text-center">
+                  <input type="checkbox"
+                    class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    [checked]="isAllSelected()"
+                    (change)="toggleSelectAll()">
+                </th>
+                <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Product</th>
+                <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Profit</th>
+                <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Stock</th>
+                <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Status</th>
+                <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="text-gray-700 dark:text-gray-300">
+              @for (product of filteredProducts(); track product.id) {
+                <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
+                  <td class="py-3 px-4 text-center">
+                    <input type="checkbox" 
+                      class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                      [checked]="selectedProducts().has(product.id)"
+                      (change)="toggleSelection(product.id)">
+                  </td>
+                  <td class="py-3 px-4">
+                    <a [routerLink]="['/inventory', product.id]" class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">{{ product.name }}</a>
+                    <div class="text-xs text-gray-500">{{ product.category }}</div>
+                  </td>
+                  <td class="py-3 px-4 font-semibold" [class]="getProfitMarginClass(product.margin)">
+                    {{ product.profit | currency }}
+                    <span class="text-xs font-normal">({{ product.margin | number:'1.0-1' }}%)</span>
+                  </td>
+                  <td class="py-3 px-4 font-mono">{{ product.quantityInStock }} / {{ product.minStockLevel }}</td>
+                  <td class="py-3 px-4">
+                    @if (product.quantityInStock <= 0) {
+                      <span class="px-2 py-1 font-semibold leading-tight rounded-full text-xs text-red-700 bg-red-100 dark:text-red-200 dark:bg-red-900">
+                        Out of Stock
+                      </span>
+                    } @else if (product.quantityInStock <= product.minStockLevel) {
+                      <span class="px-2 py-1 font-semibold leading-tight rounded-full text-xs text-yellow-800 bg-yellow-100 dark:text-yellow-200 dark:bg-yellow-900">
+                        Low Stock
+                      </span>
+                    } @else {
+                      <span class="px-2 py-1 font-semibold leading-tight rounded-full text-xs text-green-700 bg-green-100 dark:text-green-200 dark:bg-green-900">
+                        In Stock
+                      </span>
+                    }
+                  </td>
+                  <td class="py-3 px-4 relative">
+                     <button (click)="toggleMenu(product.id, $event)" class="p-2 rounded-full text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none">
+                      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path></svg>
+                    </button>
+                    @if (activeMenuProductId() === product.id) {
+                      <div class="fixed inset-0 z-10" (click)="closeMenu()"></div>
+                      <div class="absolute right-8 top-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-20 border border-gray-200 dark:border-gray-700">
+                        <div class="py-1">
+                           <button (click)="openModal('history', product)" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center">
+                            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            History
+                          </button>
+                          <button (click)="openModal('edit', product)" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center">
+                            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg>
+                            Edit
+                          </button>
+                          <button (click)="openModal('delete', product)" class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center">
+                            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="7" class="text-center py-4 text-gray-500 dark:text-gray-400">No products found.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+        @default {
+           <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+            @switch (activeTab()) {
+              @case ('low') { These items are at or below their minimum stock level and should be reordered. }
+              @case ('out') { These items have no stock remaining. }
+              @case ('highMargin') { These items have a profit margin over 40%. }
+            }
+          </p>
+          <table class="min-w-full bg-white dark:bg-gray-800">
+             <thead class="bg-gray-800 text-white">
+                <tr>
+                  <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Product</th>
+                  <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Current Stock</th>
+                  <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Min Stock Level</th>
+                  <th class="text-left py-3 px-4 uppercase font-semibold text-sm">Reorder Qty</th>
+                </tr>
+              </thead>
+              <tbody class="text-gray-700 dark:text-gray-300">
+                @for (product of filteredProducts(); track product.id) {
+                  <tr class="border-b border-gray-200 dark:border-gray-700">
+                    <td class="py-3 px-4 font-medium" [class.text-red-500]="product.quantityInStock <= 0">
+                      <a [routerLink]="['/inventory', product.id]" class="text-indigo-600 dark:text-indigo-400 hover:underline">{{ product.name }}</a>
+                    </td>
+                    <td class="py-3 px-4">
+                      <span class="px-2 py-1 font-semibold leading-tight rounded-full text-xs"
+                         [class]="product.quantityInStock <= 0 ? 'text-red-700 bg-red-100 dark:text-red-200 dark:bg-red-900' : 'text-yellow-800 bg-yellow-100 dark:text-yellow-200 dark:bg-yellow-900'">
+                        {{ product.quantityInStock }}
+                      </span>
+                    </td>
+                    <td class="py-3 px-4">{{ product.minStockLevel }}</td>
+                    <td class="py-3 px-4">{{ product.reorderQuantity }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="4" class="text-center py-4 text-gray-500 dark:text-gray-400">
+                      @switch (activeTab()) {
+                        @case ('low') { No low stock items. Great job! }
+                        @case ('out') { No items are out of stock. }
+                        @case ('highMargin') { No high margin items found. }
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+          </table>
+        }
+      }
     </div>
   </div>
 </div>
+
+@if (modalState().type === 'history' && modalState().product) {
+  <app-stock-movements [product]="modalState().product!" (closeModal)="closeModal()"></app-stock-movements>
+}
+
+@if (modalState().type === 'add' || modalState().type === 'edit') {
+  <app-product-form 
+    [product]="modalState().product" 
+    (save)="handleSaveProduct($event)" 
+    (cancel)="closeModal()">
+  </app-product-form>
+}
+
+@if (modalState().type === 'delete' && modalState().product) {
+  <app-confirm-delete
+    itemType="product"
+    [itemName]="modalState().product!.name"
+    (confirm)="handleDelete()"
+    (cancel)="closeModal()">
+  </app-confirm-delete>
+}
+
+@if (modalState().type === 'deleteMultiple') {
+  <app-confirm-delete
+    itemType="products"
+    [itemName]="selectedProducts().size + ' items'"
+    (confirm)="handleDelete()"
+    (cancel)="closeModal()">
+  </app-confirm-delete>
+}

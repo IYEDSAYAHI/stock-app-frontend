@@ -1,20 +1,67 @@
 
 @media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-container, .print-container * {
+    visibility: visible;
+  }
+  .print-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
   .noprint {
     display: none !important;
   }
-  .print-container {
-    padding: 0 !important;
-    background-color: white !important;
-  }
   .invoice-box {
     box-shadow: none !important;
-    border: 1px solid #eee;
-    margin: 0;
-    padding: 20px;
-    font-size: 16px;
-    line-height: 24px;
-    font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
-    color: #555;
+    margin: 0 auto;
+    padding: 20px !important;
+    font-size: 10pt;
+    font-family: 'Times New Roman', Times, serif;
+    color: #000 !important;
+    background-color: #fff !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    border-radius: 0 !important;
+    border: 1px solid #000 !important;
+    -webkit-print-color-adjust: exact; /* Instructs browser to print colors and backgrounds */
+    print-color-adjust: exact;
   }
+
+  /*
+    Force ALL elements within the invoice box to have black text.
+    This is an aggressive override for any Tailwind color utilities (e.g., text-red-500, dark:text-gray-300).
+  */
+  .invoice-box * {
+    color: #000 !important;
+  }
+
+  /*
+    Force ALL elements with a background color utility to have a transparent background.
+    This ensures a clean white page, removing any gray headers or colored rows.
+  */
+   .invoice-box [class*="bg-"] {
+     background-color: transparent !important;
+   }
+
+   /* 
+     Ensure all borders are solid black for a professional look.
+   */
+   .invoice-box [class*="border"] {
+     border-color: #000 !important;
+   }
+
+   /* Ensure table borders are consistent */
+   .invoice-box table,
+   .invoice-box th,
+   .invoice-box td {
+     border-style: solid !important;
+     border-width: 1px !important;
+     border-color: #000 !important;
+   }
 }

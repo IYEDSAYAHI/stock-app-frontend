@@ -1,0 +1,153 @@
+<div class="container mx-auto">
+  <!-- Top Row: KPI Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+    <!-- Total Revenue Card -->
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-medium text-gray-400">Total Revenue</h3>
+          @if (kpiData().totalRevenue.changeType === 'increase') {
+            <div class="flex items-center text-sm font-medium text-green-500">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+              <span>+{{ kpiData().totalRevenue.change }}%</span>
+            </div>
+          }
+        </div>
+        <p class="text-4xl font-bold text-gray-900 dark:text-white mt-2">{{ kpiData().totalRevenue.value | currency:'USD':'symbol':'1.2-2' }}</p>
+      </div>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">vs. last month</p>
+    </div>
+
+    <!-- Low Stock Items Card -->
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg flex flex-col justify-between">
+      <div>
+        <h3 class="text-lg font-medium text-gray-400">Low Stock Items</h3>
+        <p class="text-4xl font-bold text-gray-900 dark:text-white mt-2">{{ kpiData().lowStockItems.value }}</p>
+      </div>
+      <p class="text-sm text-yellow-500 dark:text-yellow-400 mt-4">{{ kpiData().lowStockItems.subtitle }}</p>
+    </div>
+
+    <!-- Pending Invoices Card -->
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg flex flex-col justify-between">
+      <div>
+        <h3 class="text-lg font-medium text-gray-400">Pending Invoices</h3>
+        <p class="text-4xl font-bold text-gray-900 dark:text-white mt-2">{{ kpiData().pendingInvoices.value }}</p>
+      </div>
+      <p class="text-sm text-blue-500 dark:text-blue-400 mt-4">{{ kpiData().pendingInvoices.subtitle }}</p>
+    </div>
+  </div>
+
+  <!-- Second Row: Panels -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Top Selling Products Panel -->
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+      <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Top Selling Products</h2>
+      <div class="space-y-5">
+        @for (product of topSellingProducts; track product.name) {
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="text-base font-medium text-gray-700 dark:text-gray-300">{{ product.name }}</span>
+               <div class="flex items-center">
+                <span [class]="product.trend === 'up' ? 'text-green-500' : 'text-red-500'" class="mr-2 font-semibold">
+                  {{ product.trend === 'up' ? '▲' : '▼' }}
+                </span>
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ product.unitsSold }} units</span>
+              </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3 dark:bg-slate-700">
+              <div class="progress-bar bg-gradient-to-r from-cyan-400 to-blue-500 h-3 rounded-full" [style.width.%]="(product.unitsSold / maxUnitsSold) * 100"></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Inventory Health Panel -->
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+      <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6">Inventory Health</h2>
+      <div class="space-y-5">
+        <div>
+          <div class="flex justify-between mb-1">
+            <span class="text-base font-medium text-green-500 dark:text-green-400">In Stock</span>
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ inStockCount() }} / {{ totalProducts() }} items</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-4 dark:bg-slate-700">
+            <div class="bg-green-500 h-4 rounded-full" [style.width.%]="inventoryHealth().inStock"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between mb-1">
+            <span class="text-base font-medium text-yellow-500 dark:text-yellow-400">Low Stock</span>
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ lowStockCount() }} / {{ totalProducts() }} items</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-4 dark:bg-slate-700">
+            <div class="bg-yellow-500 h-4 rounded-full" [style.width.%]="inventoryHealth().lowStock"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between mb-1">
+            <span class="text-base font-medium text-red-500 dark:text-red-400">Out of Stock</span>
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ outOfStockCount() }} / {{ totalProducts() }} items</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-4 dark:bg-slate-700">
+            <div class="bg-red-500 h-4 rounded-full" [style.width.%]="inventoryHealth().outOfStock"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Critical Stock Alerts Panel -->
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
+      <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Stock Alerts</h2>
+      <div class="overflow-x-auto">
+        @if(criticalAlerts().length > 0) {
+          <table class="min-w-full">
+            <thead class="border-b border-gray-200 dark:border-slate-700">
+              <tr>
+                <th class="text-left py-2 px-2 uppercase font-semibold text-sm text-gray-500 dark:text-gray-400">Product</th>
+                <th class="text-left py-2 px-2 uppercase font-semibold text-sm text-gray-500 dark:text-gray-400">Stock</th>
+                <th class="text-left py-2 px-2 uppercase font-semibold text-sm text-gray-500 dark:text-gray-400">Status</th>
+              </tr>
+            </thead>
+            <tbody class="text-gray-700 dark:text-gray-300">
+              @for (alert of criticalAlerts(); track alert.name) {
+                <tr class="border-b border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                  <td class="py-3 px-2 font-medium">{{ alert.name }}</td>
+                  <td class="py-3 px-2"><span class="font-bold">{{ alert.stockCurrent }}</span> / {{ alert.stockThreshold }}</td>
+                  <td class="py-3 px-2">
+                     <span class="px-3 py-1 text-xs font-semibold rounded-full"
+                      [class]="alert.status === 'Out of Stock' 
+                          ? 'text-red-800 bg-red-100 dark:text-red-100 dark:bg-red-500/30' 
+                          : 'text-yellow-800 bg-yellow-100 dark:text-yellow-100 dark:bg-yellow-500/30'">
+                      {{ alert.status }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <div class="text-center py-10">
+            <p class="text-gray-500 dark:text-gray-400">No stock alerts. Good job!</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .progress-bar {
+    animation: progress-grow 1s ease-in-out forwards;
+    transform-origin: left;
+  }
+
+  @keyframes progress-grow {
+    0% {
+      transform: scaleX(0);
+    }
+    100% {
+      transform: scaleX(1);
+    }
+  }
+</style>
