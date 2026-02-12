@@ -1,19 +1,25 @@
 export enum StockMovementType {
-  Purchase = 'Purchase',
-  Sale = 'Sale',
-  Return = 'Return',
-  Adjustment = 'Adjustment',
-  Damage = 'Damage',
+  Purchase = "Purchase",
+  Sale = "Sale",
+  Return = "Return",
+  Adjustment = "Adjustment",
+  Damage = "Damage",
 }
 
 export interface StockMovement {
   id: string;
   productId: string;
-  productName: string;
-  timestamp: Date;
   type: StockMovementType;
-  quantityChange: number; // positive for IN, negative for OUT
+  quantityChange: number;
   newQuantity: number;
-  referenceId?: string; // e.g., invoiceId, purchaseOrderId
+  referenceId?: string | null;
+  notes?: string | null;
+  createdAt: string; // ISO
+}
+
+export interface AdjustStockDto {
+  type: StockMovementType;
+  quantityChange: number;
+  referenceId?: string;
   notes?: string;
 }

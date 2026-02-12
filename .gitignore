@@ -62,3 +62,7 @@ Thumbs.db
 # =========================
 *.local
 *.sw?
+
+# Angular
+.angular/
+

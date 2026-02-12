@@ -1,61 +1,115 @@
-import { Component, ChangeDetectionStrategy, input, output, inject, OnInit, signal } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
-import { Product } from '../../models/product.model';
-import { CategoryService } from '../../services/category.service';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  input,
+  output,
+  inject,
+  signal,
+  effect,
+} from "@angular/core";
+import {
+  FormBuilder,
+  Validators,
+  ReactiveFormsModule,
+  AbstractControl,
+  ValidationErrors,
+} from "@angular/forms";
+import { CommonModule } from "@angular/common";
+
+import { Product } from "../../models/product.model";
+import { CategoryService } from "../../services/category.service";
+
+type ProductFormValue = {
+  name: string;
+  category: string;
+  description: string;
+  price: number;
+  costPrice: number;
+  quantityInStock: number;
+  minStockLevel: number;
+  reorderQuantity: number;
+};
 
 @Component({
-  selector: 'app-product-form',
-  templateUrl: './product-form.component.html',
+  selector: "app-product-form",
+  templateUrl: "./product-form.component.html",
   imports: [CommonModule, ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProductFormComponent implements OnInit {
+export class ProductFormComponent {
   private categoryService = inject(CategoryService);
-  // FIX: Injected FormBuilder as a class property to ensure correct type inference.
   private fb = inject(FormBuilder);
 
   product = input<Product | null | undefined>(null);
-  save = output<Omit<Product, 'id'> | Product>();
+  save = output<Omit<Product, "id"> | Product>();
   cancel = output<void>();
 
-  // FIX: Initialized the form as a class property, which is cleaner and leverages the injected FormBuilder instance `fb`. This resolves the type inference issue.
-  productForm: FormGroup = this.fb.group({
-    name: ['', Validators.required],
-    category: ['', Validators.required],
-    description: [''],
-    price: [0, [Validators.required, Validators.min(0.01)]],
-    costPrice: [0, [Validators.required, Validators.min(0)]],
-    quantityInStock: [0, [Validators.required, Validators.min(0)]],
-    minStockLevel: [0, [Validators.required, Validators.min(0)]],
-    reorderQuantity: [1, [Validators.required, Validators.min(1)]],
-  });
   isEditMode = false;
-  
+
   categories = this.categoryService.categories;
   isAddingCategory = signal(false);
-  newCategoryName = signal('');
+  newCategoryName = signal("");
+
+  // Strongly typed, non-nullable form
+  productForm = this.fb.nonNullable.group(
+    {
+      name: ["", Validators.required],
+      category: ["", Validators.required],
+      description: [""],
+      price: [0, [Validators.required, Validators.min(0.01)]],
+      costPrice: [0, [Validators.required, Validators.min(0)]],
+      quantityInStock: [0, [Validators.required, Validators.min(0)]],
+      minStockLevel: [0, [Validators.required, Validators.min(0)]],
+      reorderQuantity: [1, [Validators.required, Validators.min(1)]],
+    },
+    { validators: [this.costNotAbovePriceValidator] },
+  );
 
   constructor() {
-    // Constructor is now clean as initialization is handled via property initializers.
-  }
+    // React to input changes (not just first init)
+    effect(() => {
+      const p = this.product();
+      this.isEditMode = !!p;
 
-  ngOnInit(): void {
-    const productData = this.product();
-    if (productData) {
-      this.isEditMode = true;
-      this.productForm.patchValue(productData);
-    }
+      if (p) {
+        this.productForm.patchValue({
+          name: p.name ?? "",
+          category: p.category ?? "",
+          description: p.description ?? "",
+          price: Number(p.price ?? 0),
+          costPrice: Number(p.costPrice ?? 0),
+          quantityInStock: Number(p.quantityInStock ?? 0),
+          minStockLevel: Number(p.minStockLevel ?? 0),
+          reorderQuantity: Number(p.reorderQuantity ?? 1),
+        });
+      } else {
+        // Reset to defaults for "Add"
+        this.productForm.reset({
+          name: "",
+          category: "",
+          description: "",
+          price: 0,
+          costPrice: 0,
+          quantityInStock: 0,
+          minStockLevel: 0,
+          reorderQuantity: 1,
+        });
+      }
+
+      // Close "add category" UI when switching modes
+      this.isAddingCategory.set(false);
+      this.newCategoryName.set("");
+    });
   }
 
   addNewCategory(): void {
     const newCat = this.newCategoryName().trim();
-    if (newCat) {
-      this.categoryService.addCategory(newCat);
-      this.productForm.get('category')?.setValue(newCat);
-      this.isAddingCategory.set(false);
-      this.newCategoryName.set('');
-    }
+    if (!newCat) return;
+
+    this.categoryService.addCategory(newCat);
+    this.productForm.controls.category.setValue(newCat);
+    this.isAddingCategory.set(false);
+    this.newCategoryName.set("");
   }
 
   onSubmit(): void {
@@ -64,15 +118,37 @@ export class ProductFormComponent implements OnInit {
       return;
     }
 
-    let formData = this.productForm.value;
+    const raw = this.productForm.getRawValue();
+
+    // Ensure numeric fields are numbers (defensive)
+    const dto: ProductFormValue = {
+      ...raw,
+      price: Number(raw.price),
+      costPrice: Number(raw.costPrice),
+      quantityInStock: Number(raw.quantityInStock),
+      minStockLevel: Number(raw.minStockLevel),
+      reorderQuantity: Number(raw.reorderQuantity),
+    };
+
     if (this.isEditMode) {
-      formData = { ...this.product(), ...formData };
+      const existing = this.product();
+      if (!existing) return;
+      this.save.emit({ ...existing, ...dto });
+    } else {
+      this.save.emit(dto);
     }
-    
-    this.save.emit(formData);
   }
 
   onCancel(): void {
     this.cancel.emit();
+  }
+
+  private costNotAbovePriceValidator(
+    control: AbstractControl,
+  ): ValidationErrors | null {
+    const price = Number(control.get("price")?.value);
+    const cost = Number(control.get("costPrice")?.value);
+    if (!Number.isFinite(price) || !Number.isFinite(cost)) return null;
+    return cost > price ? { costAbovePrice: true } : null;
   }
 }
