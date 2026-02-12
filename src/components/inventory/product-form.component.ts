@@ -133,7 +133,9 @@ export class ProductFormComponent {
     if (this.isEditMode) {
       const existing = this.product();
       if (!existing) return;
-      this.save.emit({ ...existing, ...dto });
+
+      // Only keep id from existing, do NOT spread existing object
+      this.save.emit({ id: existing.id, ...dto });
     } else {
       this.save.emit(dto);
     }

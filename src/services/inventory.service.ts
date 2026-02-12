@@ -9,6 +9,16 @@ import { NotificationService } from "./notification.service";
 import { Observable, map } from "rxjs";
 
 export type InventoryTab = "all" | "low" | "out" | "highMargin";
+export type UpsertProductPayload = {
+  name: string;
+  category: string;
+  description?: string | null;
+  price: string;
+  costPrice: string;
+  quantityInStock: number;
+  minStockLevel: number;
+  reorderQuantity: number;
+};
 
 interface PaginatedProductsResponse {
   items: any[]; // API returns numeric as string sometimes
@@ -103,41 +113,56 @@ export class InventoryService {
 
   /** Create */
   addProduct(productData: Omit<Product, "id">) {
-    return this.http
-      .post<any>(`${this.baseUrl}/products`, productData)
-      .subscribe({
-        next: (created) => {
-          this.notification.show(
-            `Product "${created.name}" added successfully.`,
-            "success",
-          );
-          this.loadProducts(); // refresh list
-        },
-        error: (err) => {
-          console.error(err);
-          this.notification.show("Failed to add product.", "error");
-        },
-      });
+    const payload = this.toUpsertPayload(productData);
+
+    return this.http.post<any>(`${this.baseUrl}/products`, payload).subscribe({
+      next: (created) => {
+        this.notification.show(
+          `Product "${created.name}" added successfully.`,
+          "success",
+        );
+        this.loadProducts();
+      },
+      error: (err) => {
+        console.error(err);
+        this.notification.show("Failed to add product.", "error");
+      },
+    });
+  }
+
+  private toUpsertPayload(p: any): UpsertProductPayload {
+    return {
+      name: p.name,
+      category: p.category,
+      description: p.description ?? null,
+      price: String(p.price),
+      costPrice: String(p.costPrice),
+      quantityInStock: Number(p.quantityInStock ?? 0),
+      minStockLevel: Number(p.minStockLevel ?? 0),
+      reorderQuantity: Number(p.reorderQuantity ?? 1),
+    };
   }
 
   /** Update */
-  updateProduct(updatedProduct: Product) {
+  updateProduct(updatedProduct: any) {
+    const payload = this.toUpsertPayload(updatedProduct);
+
     return this.http
-      .patch<any>(
-        `${this.baseUrl}/products/${updatedProduct.id}`,
-        updatedProduct,
-      )
+      .patch<any>(`${this.baseUrl}/products/${updatedProduct.id}`, payload)
       .subscribe({
         next: (saved) => {
           this.notification.show(
             `Product "${saved.name}" updated successfully.`,
             "success",
           );
-          this.loadProducts(); // refresh list
+          this.loadProducts();
         },
         error: (err) => {
           console.error(err);
-          this.notification.show("Failed to update product.", "error");
+          this.notification.show(
+            err?.error?.message?.join?.(", ") ?? "Failed to update product.",
+            "error",
+          );
         },
       });
   }
