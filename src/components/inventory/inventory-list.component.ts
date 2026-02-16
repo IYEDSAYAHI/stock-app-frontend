@@ -16,8 +16,9 @@ import { Product } from "../../models/product.model";
 import { StockMovementsComponent } from "./stock-movements.component";
 import { ProductFormComponent } from "./product-form.component";
 import { ConfirmDeleteComponent } from "../shared/confirm-delete.component";
+import { CategoryManagerComponent } from "./category-manager.component";
 
-type InventoryTab = "all" | "low" | "out" | "highMargin";
+type InventoryTab = "all" | "low" | "out" | "categories" | "highMargin";
 type ModalState = {
   type: "add" | "edit" | "delete" | "deleteMultiple" | "history" | null;
   product?: Product;
@@ -37,6 +38,7 @@ interface ProductWithProfit extends Product {
     ProductFormComponent,
     ConfirmDeleteComponent,
     RouterLink,
+    CategoryManagerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -59,14 +61,16 @@ export class InventoryListComponent {
       const tab = this.activeTab();
       const search = this.searchTerm();
 
-      // reset selection when query changes
       this.selectedProducts.set(new Set());
+
+      // ✅ Don't load products when on Categories tab
+      if (tab === "categories") return;
 
       this.inventoryService.loadProducts({
         tab,
         search,
         page: 1,
-        limit: 100, // keep big for now; later add pagination UI
+        limit: 100,
       });
     });
 

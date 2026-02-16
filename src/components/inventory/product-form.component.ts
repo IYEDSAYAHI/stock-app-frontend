@@ -21,7 +21,7 @@ import { CategoryService } from "../../services/category.service";
 
 type ProductFormValue = {
   name: string;
-  category: string;
+  categoryId: string | null;
   description: string;
   price: number;
   costPrice: number;
@@ -54,7 +54,7 @@ export class ProductFormComponent {
   productForm = this.fb.nonNullable.group(
     {
       name: ["", Validators.required],
-      category: ["", Validators.required],
+      categoryId: [null as string | null, Validators.required], // ✅
       description: [""],
       price: [0, [Validators.required, Validators.min(0.01)]],
       costPrice: [0, [Validators.required, Validators.min(0)]],
@@ -66,6 +66,7 @@ export class ProductFormComponent {
   );
 
   constructor() {
+    this.categoryService.load();
     // React to input changes (not just first init)
     effect(() => {
       const p = this.product();
@@ -74,7 +75,7 @@ export class ProductFormComponent {
       if (p) {
         this.productForm.patchValue({
           name: p.name ?? "",
-          category: p.category ?? "",
+          categoryId: p.categoryId ?? null,
           description: p.description ?? "",
           price: Number(p.price ?? 0),
           costPrice: Number(p.costPrice ?? 0),
@@ -86,7 +87,7 @@ export class ProductFormComponent {
         // Reset to defaults for "Add"
         this.productForm.reset({
           name: "",
-          category: "",
+          categoryId: null,
           description: "",
           price: 0,
           costPrice: 0,
@@ -106,10 +107,20 @@ export class ProductFormComponent {
     const newCat = this.newCategoryName().trim();
     if (!newCat) return;
 
-    this.categoryService.addCategory(newCat);
-    this.productForm.controls.category.setValue(newCat);
-    this.isAddingCategory.set(false);
-    this.newCategoryName.set("");
+    this.categoryService.create(newCat).subscribe({
+      next: (created) => {
+        // select the created category by id
+        this.productForm.controls.categoryId.setValue(created.id);
+
+        // close UI
+        this.isAddingCategory.set(false);
+        this.newCategoryName.set("");
+      },
+      error: (err) => {
+        // optional: handle 409 duplicate name etc.
+        console.error(err);
+      },
+    });
   }
 
   onSubmit(): void {
@@ -120,7 +131,6 @@ export class ProductFormComponent {
 
     const raw = this.productForm.getRawValue();
 
-    // Ensure numeric fields are numbers (defensive)
     const dto: ProductFormValue = {
       ...raw,
       price: Number(raw.price),
